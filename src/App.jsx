@@ -25,6 +25,21 @@ const db = {
   delete: (table, id) => sbFetch(`${table}?id=eq.${id}`, { method: "DELETE", prefer: "return=minimal" }),
   upsert: (table, data) => sbFetch(table, { method: "POST", body: JSON.stringify(data), headers: { "Prefer": "resolution=merge-duplicates,return=representation" } }),
 };
+// === STORAGE ===
+async function uploadFile(file) {
+  const fileName = Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const res = await fetch(SUPA_URL + '/storage/v1/object/documents/' + fileName, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Content-Type': file.type || 'application/octet-stream',
+    },
+    body: file,
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return SUPA_URL + '/storage/v1/object/public/documents/' + fileName;
+}
 // === DEFAULTS ===
 const DEF_COMM = [
   { id: "c1", nom: "Finances & Budget", color: "#2563eb", icon: "[Fin]" },
@@ -415,9 +430,9 @@ function CoForm({ addCo, updCo, ss, cm }) {
       <Fl label="Icone"><div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>{ics.map(ic=><button key={ic} onClick={()=>setIcon(ic)} style={{ width:40,height:40,borderRadius:10,border:`2px solid ${icon===ic?T.primary:T.bd}`,background:icon===ic?T.primary+"0d":"#fff",fontSize:20,cursor:"pointer" }}>{ic}</button>)}</div></Fl>
       <Fl label="Couleur"><div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>{cols.map(c=><button key={c} onClick={()=>setColor(c)} style={{ width:36,height:36,borderRadius:"50%",background:c,border:`3px solid ${color===c?T.primary:"transparent"}`,cursor:"pointer" }}/>)}</div></Fl>
       <button onClick={save} disabled={saving} style={{ ...bP,width:"100%",marginTop:8 }}>{I.ok} <span>{saving?"...":(cm?"Modifier":"Creer")}</span></button>
+}
     </div></div>
   );
-}
 // === REPORTS VIEW ===
 function RepView({ rp, addRp, updRp, delRp, co, ss }) {
   const [q,setQ]=useState("");
@@ -444,6 +459,12 @@ function RpDetail({ r, co, updRp, delRp, ss }) {
   return <div style={{ padding:16 }}><div style={{ background:"#fff",borderRadius:T.r,padding:20,boxShadow:T.sh }}>
     <div style={{ fontSize:12,color:T.tm,marginBottom:8 }}>{fmtD(r.date)}{r.commission&&` - ${r.commission}`}</div>
     <div style={{ fontSize:14,lineHeight:1.7,whiteSpace:"pre-wrap" }}>{r.content||"Aucun contenu."}</div>
+    {r.file_url&&<a href={r.file_url} target="_blank" rel="noopener noreferrer"
+      style={{ display:"flex",alignItems:"center",gap:8,marginTop:12,padding:"12px 16px",
+        background:T.primary+"0d",borderRadius:10,color:T.primary,textDecoration:"none",
+        fontSize:14,fontWeight:600,border:"1.5px solid "+T.primary+"30" }}>
+      [Doc] Telecharger le document joint
+    </a>}
     <div style={{ display:"flex",gap:8,marginTop:16 }}>
       <button onClick={()=>ss({title:"Modifier",component:<RpForm co={co} updRp={updRp} ss={ss} rp={r}/>})} style={{ ...bS,background:T.primary+"10",color:T.primary }}>{I.ed}<span>Modifier</span></button>
       <button onClick={()=>{if(confirm("Supprimer ?")){ delRp(r.id); ss(null); }}} style={{ ...bS,background:T.red+"10",color:T.red }}>{I.del}<span>Supprimer</span></button>
@@ -454,13 +475,28 @@ function RpForm({ co, addRp, updRp, ss, rp }) {
   const [title,setTitle]=useState(rp?.title||""); const [date,setDate]=useState(rp?.date?new Date(rp.date).toISOString().slice(0,10):new Date().toISOString().slice(0,10));
   const [type,setType]=useState(rp?.type||"pv"); const [comm,setComm]=useState(rp?.commission||""); const [content,setContent]=useState(rp?.content||"");
   const [saving,setSaving]=useState(false);
-  const save=async()=>{ if(!title)return; setSaving(true); const o={id:rp?.id||gid(),title,date,type,commission:comm,content}; try { rp?await updRp(o):await addRp(o); ss(null); } catch(e){ alert("Erreur"); } setSaving(false); };
+  const [file,setFile]=useState(null);
+  const [fileUrl,setFileUrl]=useState(rp?.file_url||'');
+  const save=async()=>{
+    if(!title)return; setSaving(true);
+    let fUrl = fileUrl;
+    if(file){
+      try { fUrl = await uploadFile(file); } catch(e){ alert('Erreur upload: '+e.message); setSaving(false); return; }
+    }
+    const o={id:rp?.id||gid(),title,date,type,commission:comm,content,file_url:fUrl};
+    try { rp?await updRp(o):await addRp(o); ss(null); } catch(e){ alert('Erreur'); } setSaving(false);
+  };
   return <div style={{ padding:16 }}><div style={{ background:"#fff",borderRadius:T.r,padding:20,boxShadow:T.sh }}>
     <Fl label="Type"><div style={{ display:"flex",gap:8 }}>{[["pv","[PV] PV"],["cr","[Doc] CR"],["note","[Note] Note"]].map(([k,l])=><button key={k} onClick={()=>setType(k)} style={{ flex:1,padding:"8px 4px",borderRadius:10,border:`2px solid ${type===k?T.primary:T.bd}`,background:type===k?T.primary+"0d":"#fff",fontSize:13,fontWeight:500,cursor:"pointer",color:type===k?T.primary:T.tm }}>{l}</button>)}</div></Fl>
     <Fl label="Titre"><input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Ex: PV Conseil du 15 mars" style={iS}/></Fl>
     <Fl label="Date"><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={iS}/></Fl>
     <Fl label="Commission"><select value={comm} onChange={e=>setComm(e.target.value)} style={iS}><option value=""> Aucune </option>{co.map(c=><option key={c.id} value={c.nom}>{c.icon} {c.nom}</option>)}</select></Fl>
     <Fl label="Contenu"><textarea value={content} onChange={e=>setContent(e.target.value)} rows={8} placeholder="Rediger le compte-rendu..." style={{ ...iS,resize:"vertical",lineHeight:1.6 }}/></Fl>
+    <Fl label="[PDF/Word] Joindre un fichier">
+      <input type="file" accept=".pdf,.doc,.docx" onChange={e=>setFile(e.target.files[0])} style={{ ...iS,padding:'8px' }}/>
+      {fileUrl&&!file&&<div style={{marginTop:6,fontSize:12,color:T.green}}>Fichier deja joint</div>}
+      {file&&<div style={{marginTop:6,fontSize:12,color:T.primary}}>{file.name}</div>}
+    </Fl>
     <button onClick={save} disabled={saving} style={{ ...bP,width:"100%",marginTop:8 }}>{I.ok} <span>{saving?"Enregistrement...":(rp?"Modifier":"Enregistrer")}</span></button>
   </div></div>;
 }

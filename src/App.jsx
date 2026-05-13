@@ -27,18 +27,18 @@ const db = {
 };
 // === DEFAULTS ===
 const DEF_COMM = [
-  { id: "c1", nom: "Finances & Budget", color: "#2563eb", icon: " " },
-  { id: "c2", nom: "Urbanisme & Travaux", color: "#059669", icon: " " },
-  { id: "c3", nom: "Vie Scolaire & Jeunesse", color: "#d97706", icon: " " },
-  { id: "c4", nom: "Communication & Événements", color: "#7c3aed", icon: " " },
-  { id: "c5", nom: "Environnement & Cadre de vie", color: "#0d9488", icon: " " },
+  { id: "c1", nom: "Finances & Budget", color: "#2563eb", icon: "[Fin]" },
+  { id: "c2", nom: "Urbanisme & Travaux", color: "#059669", icon: "[Urb]" },
+  { id: "c3", nom: "Vie Scolaire & Jeunesse", color: "#d97706", icon: "[Sco]" },
+  { id: "c4", nom: "Communication & Evenements", color: "#7c3aed", icon: "[Com]" },
+  { id: "c5", nom: "Environnement & Cadre de vie", color: "#0d9488", icon: "[Env]" },
 ];
 const REM_OPTS = [
-  { v: 0, l: "Au moment de l'événement" }, { v: 5, l: "5 min avant" }, { v: 15, l: "15 min avant" },
+  { v: 0, l: "Au moment de l'evenement" }, { v: 5, l: "5 min avant" }, { v: 15, l: "15 min avant" },
   { v: 30, l: "30 min avant" }, { v: 60, l: "1 heure avant" }, { v: 120, l: "2 heures avant" },
   { v: 1440, l: "1 jour avant" }, { v: 2880, l: "2 jours avant" }, { v: 10080, l: "1 semaine avant" },
 ];
-const MO = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+const MO = ["Janvier","Fevrier","Mars","Avril","Mai","Juin","Juillet","Aout","Septembre","Octobre","Novembre","Decembre"];
 const DF = ["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
 const gid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const fmtD = d => { const x = new Date(d); return `${DF[x.getDay()]} ${x.getDate()} ${MO[x.getMonth()]} ${x.getFullYear()}`; };
@@ -83,12 +83,12 @@ function NotifBanner({ n, onX }) {
     <div style={{ position:"fixed",top:70,left:"50%",transform:"translateX(-50%)",zIndex:200,width:"calc(100% - 32px)",maxWidth:448,background:`linear-gradient(135deg,${T.primary},${T.pL})`,borderRadius:16,padding:"14px 16px",boxShadow:"0 8px 32px rgba(0,0,0,0.2)",color:"#fff",animation:"nSlide .4s cubic-bezier(.34,1.56,.64,1)" }}>
       <style>{`@keyframes nSlide{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes nPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}`}</style>
       <div style={{ display:"flex",alignItems:"flex-start",gap:12 }}>
-        <div style={{ width:40,height:40,borderRadius:12,background:"rgba(255,255,255,.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,animation:"nPulse 2s infinite",fontSize:20 }}>
+        <div style={{ width:40,height:40,borderRadius:12,background:"rgba(255,255,255,.15)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,animation:"nPulse 2s infinite",fontSize:20 }}>[!]</div>
         <div style={{ flex:1,minWidth:0 }}>
           <div style={{ fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:1,opacity:.7,marginBottom:3 }}>Rappel</div>
           <div style={{ fontSize:14,fontWeight:600,marginBottom:2 }}>{n.title}</div>
           <div style={{ fontSize:12,opacity:.85 }}>{fmtRel(n.eventDate)} - {fmtT(n.eventDate)}</div>
-          {n.lieu && <div style={{ fontSize:11,opacity:.7,marginTop:2 }}> {n.lieu}</div>}
+          {n.lieu && <div style={{ fontSize:11,opacity:.7,marginTop:2 }}>Lieu: {n.lieu}</div>}
         </div>
         <button onClick={onX} style={{ background:"rgba(255,255,255,.15)",border:"none",borderRadius:8,padding:6,cursor:"pointer",color:"#fff" }}>{I.x}</button>
       </div>
@@ -135,7 +135,7 @@ export default function MairieNoailly() {
         setComms(DEF_COMM);
       }
     } catch (e) {
-      setError("Impossible de se connecter. Vérifiez votre connexion internet.");
+      setError("Impossible de se connecter. Verifiez votre connexion internet.");
     }
     setLoading(false);
   }, []);
@@ -163,7 +163,7 @@ export default function MairieNoailly() {
             const notif = { id: rid, title: ev.title, eventDate: ev.date, lieu: ev.lieu };
             setBanner(notif);
             setTimeout(() => setBanner(null), 8000);
-            try { if (typeof Notification !== "undefined" && Notification.permission === "granted") new Notification("
+            try { if (typeof Notification !== "undefined" && Notification.permission === "granted") new Notification("[M] Mairie de Noailly", { body: `${ev.title}  ${fmtRel(ev.date)}` }); } catch(e) {}
             setFiredR(p => new Set([...p, rid]));
           }
         });
@@ -174,7 +174,7 @@ export default function MairieNoailly() {
     return () => clearInterval(t);
   }, [loading]);
   useEffect(() => { try { if (typeof Notification !== "undefined" && Notification.permission === "default") Notification.requestPermission(); } catch(e) {} }, []);
-  // CRUD helpers — all write to Supabase
+  // CRUD helpers  all write to Supabase
   const addEvent = async (obj) => { const r = await db.insert("events", obj); setEvents(p => [...p, { ...r[0], reminders: r[0].reminders || [] }]); };
   const updEvent = async (obj) => { await db.update("events", obj.id, obj); setEvents(p => p.map(e => e.id === obj.id ? { ...obj } : e)); };
   const delEvent = async (id) => { await db.delete("events", id); setEvents(p => p.filter(e => e.id !== id)); };
@@ -190,7 +190,7 @@ export default function MairieNoailly() {
   if (loading) return (
     <div style={{ height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:T.bg,fontFamily:T.fs }}>
       <div style={{ textAlign:"center" }}>
-        <div style={{ fontSize:40,marginBottom:12 }}> </div>
+        <div style={{ fontSize:40,marginBottom:12 }}>[M]</div>
         <div style={{ color:T.primary,fontFamily:T.f,fontSize:18,marginBottom:8 }}>Mairie de Noailly</div>
         <div style={{ color:T.tm,fontSize:14 }}>Connexion en cours...</div>
       </div>
@@ -199,10 +199,10 @@ export default function MairieNoailly() {
   if (error) return (
     <div style={{ height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:T.bg,fontFamily:T.fs,padding:24 }}>
       <div style={{ textAlign:"center",background:"#fff",borderRadius:T.r,padding:28,boxShadow:T.sh,maxWidth:320 }}>
-        <div style={{ fontSize:36,marginBottom:12 }}> </div>
+        <div style={{ fontSize:36,marginBottom:12 }}>[!]</div>
         <div style={{ color:T.primary,fontFamily:T.f,fontSize:16,marginBottom:8 }}>Connexion impossible</div>
         <div style={{ color:T.tm,fontSize:13,marginBottom:20 }}>{error}</div>
-        <button onClick={loadAll} style={{ ...bP,width:"100%" }}>{I.sync} <span>Réessayer</span></button>
+        <button onClick={loadAll} style={{ ...bP,width:"100%" }}>{I.sync} <span>Reessayer</span></button>
       </div>
     </div>
   );
@@ -210,7 +210,7 @@ export default function MairieNoailly() {
     { k:"calendar", l:"Agenda", i:I.cal },
     { k:"commissions", l:"Commissions", i:I.grp },
     { k:"reports", l:"Rapports", i:I.doc },
-    { k:"contacts", l:"Élus", i:I.usr },
+    { k:"contacts", l:"Elus", i:I.usr },
   ];
   return (
     <div style={{ minHeight:"100vh",background:T.bg,fontFamily:T.fs,color:T.tx,display:"flex",flexDirection:"column",maxWidth:480,margin:"0 auto",position:"relative" }}>
@@ -233,7 +233,7 @@ export default function MairieNoailly() {
               {syncing && <div style={{ color:"rgba(255,255,255,.7)",display:"flex",alignItems:"center",gap:4,fontSize:11 }}><div style={{ animation:"spin 1s linear infinite",display:"flex" }}>{I.sync}</div></div>}
               <div style={{ display:"flex",alignItems:"center",gap:6,background:"rgba(255,255,255,.15)",borderRadius:20,padding:"6px 14px" }}>
                 <div style={{ width:8,height:8,borderRadius:"50%",background:T.accent }} />
-                <span style={{ fontSize:12,fontWeight:500 }}>16 élus</span>
+                <span style={{ fontSize:12,fontWeight:500 }}>16 elus</span>
               </div>
             </div>
           </div>
@@ -274,9 +274,9 @@ function CalView({ ev, addEv, updEv, delEv, co, ss, cM, sCM, cY, sCY, sd, sSD })
     <div>
       <div style={{ background:"#fff",margin:16,borderRadius:T.r,boxShadow:T.sh }}>
         <div style={{ display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 20px" }}>
-          <button onClick={pm} style={{ ...bI,fontSize:22 }}>‹</button>
+          <button onClick={pm} style={{ ...bI,fontSize:22 }}></button>
           <h2 style={{ fontFamily:T.f,fontSize:16,fontWeight:700,margin:0,color:T.primary }}>{MO[cM]} {cY}</h2>
-          <button onClick={nm} style={{ ...bI,fontSize:22 }}>›</button>
+          <button onClick={nm} style={{ ...bI,fontSize:22 }}></button>
         </div>
         <div style={{ display:"grid",gridTemplateColumns:"repeat(7,1fr)",padding:"0 12px",gap:2 }}>
           {["L","M","M","J","V","S","D"].map((d,i)=><div key={i} style={{ textAlign:"center",fontSize:11,fontWeight:600,color:T.tm,padding:"4px 0" }}>{d}</div>)}
@@ -292,19 +292,19 @@ function CalView({ ev, addEv, updEv, delEv, co, ss, cM, sCM, cY, sCY, sd, sSD })
         <div style={{ padding:"0 16px",marginBottom:16 }}>
           <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
             <h3 style={{ fontFamily:T.f,fontSize:15,fontWeight:700,color:T.primary,margin:0 }}>{sd} {MO[cM]}</h3>
-            <button onClick={()=>ss({title:"Nouvel événement",component:<EvForm co={co} addEv={addEv} ss={ss} defDate={new Date(cY,cM,sd)}/>})} style={{ ...bS,background:T.primary,color:"#fff" }}>{I.add}<span>Ajouter</span></button>
+            <button onClick={()=>ss({title:"Nouvel evenement",component:<EvForm co={co} addEv={addEv} ss={ss} defDate={new Date(cY,cM,sd)}/>})} style={{ ...bS,background:T.primary,color:"#fff" }}>{I.add}<span>Ajouter</span></button>
           </div>
-          {todayEvs.length===0?<div style={{ background:"#fff",borderRadius:T.r,padding:20,textAlign:"center",color:T.tm,fontSize:14,boxShadow:T.sh }}>Aucun événement ce jour</div>
+          {todayEvs.length===0?<div style={{ background:"#fff",borderRadius:T.r,padding:20,textAlign:"center",color:T.tm,fontSize:14,boxShadow:T.sh }}>Aucun evenement ce jour</div>
             :todayEvs.map(e=><EvCard key={e.id} e={e} co={co} updEv={updEv} delEv={delEv} ss={ss}/>)}
         </div>
       )}
       {!sd && (
         <div style={{ padding:"0 16px" }}>
           <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10 }}>
-            <h3 style={{ fontFamily:T.f,fontSize:15,fontWeight:700,color:T.primary,margin:0 }}>Prochains événements</h3>
-            <button onClick={()=>ss({title:"Nouvel événement",component:<EvForm co={co} addEv={addEv} ss={ss}/>})} style={{ ...bS,background:T.primary,color:"#fff" }}>{I.add}<span>Ajouter</span></button>
+            <h3 style={{ fontFamily:T.f,fontSize:15,fontWeight:700,color:T.primary,margin:0 }}>Prochains evenements</h3>
+            <button onClick={()=>ss({title:"Nouvel evenement",component:<EvForm co={co} addEv={addEv} ss={ss}/>})} style={{ ...bS,background:T.primary,color:"#fff" }}>{I.add}<span>Ajouter</span></button>
           </div>
-          {upcoming.length===0?<div style={{ background:"#fff",borderRadius:T.r,padding:24,textAlign:"center",boxShadow:T.sh }}><div style={{ fontSize:32,marginBottom:8 }}>
+          {upcoming.length===0?<div style={{ background:"#fff",borderRadius:T.r,padding:24,textAlign:"center",boxShadow:T.sh }}><div style={{ fontSize:32,marginBottom:8 }}>[Cal]</div><div style={{ color:T.tm,fontSize:14 }}>Aucun evenement a venir</div></div>
             :upcoming.map(e=><EvCard key={e.id} e={e} co={co} updEv={updEv} delEv={delEv} ss={ss}/>)}
         </div>
       )}
@@ -319,10 +319,10 @@ function EvCard({ e, co, updEv, delEv, ss }) {
         <div style={{ flex:1 }}>
           <div style={{ fontWeight:600,fontSize:15,marginBottom:4,display:"flex",alignItems:"center",gap:6 }}>{e.title}{hasR&&<span style={{ color:T.accent,display:"flex" }}>{I.bl}</span>}</div>
           <div style={{ fontSize:13,color:T.tm,marginBottom:4 }}>{fmtD(e.date)} - {fmtT(e.date)}</div>
-          {e.lieu&&<div style={{ fontSize:12,color:T.tm }}> {e.lieu}</div>}
+          {e.lieu&&<div style={{ fontSize:12,color:T.tm }}>Lieu: {e.lieu}</div>}
           <div style={{ display:"flex",flexWrap:"wrap",gap:6,marginTop:6 }}>
             {e.commission&&<span style={{ fontSize:11,fontWeight:500,background:(cm?.color||T.accent)+"18",color:cm?.color||T.accent,padding:"3px 10px",borderRadius:20 }}>{cm?.icon} {e.commission}</span>}
-            {hasR&&<span style={{ fontSize:11,fontWeight:500,background:T.accent+"18",color:T.accent,padding:"3px 10px",borderRadius:20 }}>
+            {hasR&&<span style={{ fontSize:11,fontWeight:500,background:T.accent+"18",color:T.accent,padding:"3px 10px",borderRadius:20 }}>[!] {e.reminders.length} rappel{e.reminders.length>1?"s":""}</span>}
           </div>
         </div>
         <div style={{ display:"flex",gap:6 }}>
@@ -356,12 +356,12 @@ function EvForm({ co, addEv, updEv, ss, ev, defDate }) {
   return (
     <div style={{ padding:16 }}>
       <div style={{ background:"#fff",borderRadius:T.r,padding:20,boxShadow:T.sh }}>
-        <Fl label="Type"><div style={{ display:"flex",gap:8 }}>{[["reunion"," Réunion"],["conseil","
+        <Fl label="Type"><div style={{ display:"flex",gap:8 }}>{[["reunion","[Par] Reunion"],["conseil","[M] Conseil"],["rdv","[Rap] RDV"],["autre","[Note] Autre"]].map(([k,l])=><button key={k} onClick={()=>setType(k)} style={{ flex:1,padding:"8px 4px",borderRadius:10,border:`2px solid ${type===k?T.primary:T.bd}`,background:type===k?T.primary+"0d":"#fff",fontSize:12,fontWeight:500,cursor:"pointer",color:type===k?T.primary:T.tm }}>{l}</button>)}</div></Fl>
         <Fl label="Titre"><input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Ex: Conseil Municipal" style={iS}/></Fl>
         <Fl label="Date et heure"><input type="datetime-local" value={date} onChange={e=>setDate(e.target.value)} style={iS}/></Fl>
         <Fl label="Lieu"><input value={lieu} onChange={e=>setLieu(e.target.value)} style={iS}/></Fl>
-        <Fl label="Commission"><select value={comm} onChange={e=>setComm(e.target.value)} style={iS}><option value="">— Aucune —</option>{co.map(c=><option key={c.id} value={c.nom}>{c.icon} {c.nom}</option>)}</select></Fl>
-        <Fl label=" Rappels">
+        <Fl label="Commission"><select value={comm} onChange={e=>setComm(e.target.value)} style={iS}><option value=""> Aucune </option>{co.map(c=><option key={c.id} value={c.nom}>{c.icon} {c.nom}</option>)}</select></Fl>
+        <Fl label="[!] Rappels">
           <div style={{ background:T.bg,borderRadius:12,padding:14 }}>
             {rems.length===0&&<div style={{ fontSize:13,color:T.tm,textAlign:"center",padding:"8px 0" }}>Aucun rappel</div>}
             {rems.map((r,idx)=>(
@@ -375,7 +375,7 @@ function EvForm({ co, addEv, updEv, ss, ev, defDate }) {
           </div>
         </Fl>
         <Fl label="Notes"><textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={3} placeholder="Ordre du jour..." style={{ ...iS,resize:"vertical" }}/></Fl>
-        <button onClick={save} disabled={saving} style={{ ...bP,width:"100%",marginTop:8,opacity:saving?.7:1 }}>{I.ok} <span>{saving?"Enregistrement...":(ev?"Modifier":"Créer l'événement")}</span></button>
+        <button onClick={save} disabled={saving} style={{ ...bP,width:"100%",marginTop:8,opacity:saving?.7:1 }}>{I.ok} <span>{saving?"Enregistrement...":(ev?"Modifier":"Creer l'evenement")}</span></button>
       </div>
     </div>
   );
@@ -391,30 +391,30 @@ function ComView({ co, addCo, updCo, delCo, ev, rp, ss }) {
       {co.map(c=>{ const cEv=ev.filter(e=>e.commission===c.nom),cRp=rp.filter(r=>r.commission===c.nom),nx=cEv.filter(e=>new Date(e.date)>=new Date()).sort((a,b)=>new Date(a.date)-new Date(b.date))[0];
         return <div key={c.id} style={{ background:"#fff",borderRadius:T.r,padding:"16px 18px",marginBottom:12,boxShadow:T.sh,borderLeft:`4px solid ${c.color}` }}>
           <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
-            <div style={{ display:"flex",alignItems:"center",gap:10 }}><span style={{ fontSize:24 }}>{c.icon}</span><div><div style={{ fontWeight:600,fontSize:15 }}>{c.nom}</div><div style={{ fontSize:12,color:T.tm,marginTop:2 }}>{cEv.length} réunion{cEv.length>1?"s":""} - {cRp.length} rapport{cRp.length>1?"s":""}</div></div></div>
+            <div style={{ display:"flex",alignItems:"center",gap:10 }}><span style={{ fontSize:24 }}>{c.icon}</span><div><div style={{ fontWeight:600,fontSize:15 }}>{c.nom}</div><div style={{ fontSize:12,color:T.tm,marginTop:2 }}>{cEv.length} reunion{cEv.length>1?"s":""} - {cRp.length} rapport{cRp.length>1?"s":""}</div></div></div>
             <div style={{ display:"flex",gap:4 }}>
               <button onClick={()=>ss({title:"Modifier",component:<CoForm updCo={updCo} ss={ss} cm={c}/>})} style={{ ...bI,color:T.tm }}>{I.ed}</button>
               <button onClick={()=>{if(confirm("Supprimer ?"))delCo(c.id);}} style={{ ...bI,color:T.red }}>{I.del}</button>
             </div>
           </div>
-          {nx&&<div style={{ marginTop:10,padding:"8px 12px",background:c.color+"0a",borderRadius:10,fontSize:13 }}><span style={{ fontWeight:600 }}>Prochaine : </span>{fmtD(nx.date)} à {fmtT(nx.date)}</div>}
+          {nx&&<div style={{ marginTop:10,padding:"8px 12px",background:c.color+"0a",borderRadius:10,fontSize:13 }}><span style={{ fontWeight:600 }}>Prochaine : </span>{fmtD(nx.date)} a {fmtT(nx.date)}</div>}
         </div>;
       })}
     </div>
   );
 }
 function CoForm({ addCo, updCo, ss, cm }) {
-  const [nom,setNom]=useState(cm?.nom||""); const [icon,setIcon]=useState(cm?.icon||" "); const [color,setColor]=useState(cm?.color||"#2563eb");
+  const [nom,setNom]=useState(cm?.nom||""); const [icon,setIcon]=useState(cm?.icon||"[Rap]"); const [color,setColor]=useState(cm?.color||"#2563eb");
   const [saving,setSaving]=useState(false);
   const cols=["#2563eb","#059669","#d97706","#7c3aed","#0d9488","#dc2626","#db2777","#4f46e5","#0891b2"];
-  const ics=[" "," "," "," "," "," "," "," "," ","⚕"," "," "," "," "," "];
+  const ics=["[Fin]","[Urb]","[Sco]","[Com]","[Env]","[Log]","[Tra]","[Pro]","[Cul]","[San]","[Spo]","[Bib]","[Tec]","[Par]","[Rap]"];
   const save=async()=>{ if(!nom)return; setSaving(true); const o={id:cm?.id||gid(),nom,icon,color}; try { cm?await updCo(o):await addCo(o); ss(null); } catch(e){ alert("Erreur"); } setSaving(false); };
   return (
     <div style={{ padding:16 }}><div style={{ background:"#fff",borderRadius:T.r,padding:20,boxShadow:T.sh }}>
       <Fl label="Nom"><input value={nom} onChange={e=>setNom(e.target.value)} style={iS}/></Fl>
-      <Fl label="Icône"><div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>{ics.map(ic=><button key={ic} onClick={()=>setIcon(ic)} style={{ width:40,height:40,borderRadius:10,border:`2px solid ${icon===ic?T.primary:T.bd}`,background:icon===ic?T.primary+"0d":"#fff",fontSize:20,cursor:"pointer" }}>{ic}</button>)}</div></Fl>
+      <Fl label="Icone"><div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>{ics.map(ic=><button key={ic} onClick={()=>setIcon(ic)} style={{ width:40,height:40,borderRadius:10,border:`2px solid ${icon===ic?T.primary:T.bd}`,background:icon===ic?T.primary+"0d":"#fff",fontSize:20,cursor:"pointer" }}>{ic}</button>)}</div></Fl>
       <Fl label="Couleur"><div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>{cols.map(c=><button key={c} onClick={()=>setColor(c)} style={{ width:36,height:36,borderRadius:"50%",background:c,border:`3px solid ${color===c?T.primary:"transparent"}`,cursor:"pointer" }}/>)}</div></Fl>
-      <button onClick={save} disabled={saving} style={{ ...bP,width:"100%",marginTop:8 }}>{I.ok} <span>{saving?"...":(cm?"Modifier":"Créer")}</span></button>
+      <button onClick={save} disabled={saving} style={{ ...bP,width:"100%",marginTop:8 }}>{I.ok} <span>{saving?"...":(cm?"Modifier":"Creer")}</span></button>
     </div></div>
   );
 }
@@ -429,10 +429,10 @@ function RepView({ rp, addRp, updRp, delRp, co, ss }) {
         <button onClick={()=>ss({title:"Nouveau rapport",component:<RpForm co={co} addRp={addRp} ss={ss}/>})} style={{ ...bS,background:T.primary,color:"#fff" }}>{I.add}<span>Ajouter</span></button>
       </div>
       <div style={{ position:"relative",marginBottom:14 }}><div style={{ position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:T.tm }}>{I.sr}</div><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Rechercher..." style={{ ...iS,paddingLeft:40,width:"100%",boxSizing:"border-box" }}/></div>
-      {fl.length===0?<div style={{ background:"#fff",borderRadius:T.r,padding:24,textAlign:"center",boxShadow:T.sh }}><div style={{ fontSize:32,marginBottom:8 }}>
+      {fl.length===0?<div style={{ background:"#fff",borderRadius:T.r,padding:24,textAlign:"center",boxShadow:T.sh }}><div style={{ fontSize:32,marginBottom:8 }}>[Doc]</div><div style={{ color:T.tm,fontSize:14 }}>{rp.length===0?"Aucun rapport":"Aucun resultat"}</div></div>
         :fl.sort((a,b)=>new Date(b.date)-new Date(a.date)).map(r=>{ const cm=co.find(c=>c.nom===r.commission);
           return <div key={r.id} onClick={()=>ss({title:r.title,component:<RpDetail r={r} co={co} updRp={updRp} delRp={delRp} ss={ss}/>})} style={{ background:"#fff",borderRadius:T.r,padding:"14px 16px",marginBottom:10,boxShadow:T.sh,cursor:"pointer",display:"flex",alignItems:"center",gap:14 }}>
-            <div style={{ width:44,height:44,borderRadius:12,background:(cm?.color||T.accent)+"14",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0 }}>{r.type==="pv"?"
+            <div style={{ width:44,height:44,borderRadius:12,background:(cm?.color||T.accent)+"14",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0 }}>{r.type==="pv"?"[PV]":r.type==="note"?"[Note]":"[Doc]"}</div>
             <div style={{ flex:1,minWidth:0 }}><div style={{ fontWeight:600,fontSize:14,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis" }}>{r.title}</div><div style={{ fontSize:12,color:T.tm,marginTop:2 }}>{fmtD(r.date)}</div>{r.commission&&<span style={{ display:"inline-block",marginTop:4,fontSize:10,fontWeight:500,background:(cm?.color||T.accent)+"18",color:cm?.color||T.accent,padding:"2px 8px",borderRadius:20 }}>{r.commission}</span>}</div>
             <div style={{ color:T.tm }}>{I.ch}</div>
           </div>;
@@ -456,11 +456,11 @@ function RpForm({ co, addRp, updRp, ss, rp }) {
   const [saving,setSaving]=useState(false);
   const save=async()=>{ if(!title)return; setSaving(true); const o={id:rp?.id||gid(),title,date,type,commission:comm,content}; try { rp?await updRp(o):await addRp(o); ss(null); } catch(e){ alert("Erreur"); } setSaving(false); };
   return <div style={{ padding:16 }}><div style={{ background:"#fff",borderRadius:T.r,padding:20,boxShadow:T.sh }}>
-    <Fl label="Type"><div style={{ display:"flex",gap:8 }}>{[["pv"," PV"],["cr"," CR"],["note","
+    <Fl label="Type"><div style={{ display:"flex",gap:8 }}>{[["pv","[PV] PV"],["cr","[Doc] CR"],["note","[Note] Note"]].map(([k,l])=><button key={k} onClick={()=>setType(k)} style={{ flex:1,padding:"8px 4px",borderRadius:10,border:`2px solid ${type===k?T.primary:T.bd}`,background:type===k?T.primary+"0d":"#fff",fontSize:13,fontWeight:500,cursor:"pointer",color:type===k?T.primary:T.tm }}>{l}</button>)}</div></Fl>
     <Fl label="Titre"><input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Ex: PV Conseil du 15 mars" style={iS}/></Fl>
     <Fl label="Date"><input type="date" value={date} onChange={e=>setDate(e.target.value)} style={iS}/></Fl>
-    <Fl label="Commission"><select value={comm} onChange={e=>setComm(e.target.value)} style={iS}><option value="">— Aucune —</option>{co.map(c=><option key={c.id} value={c.nom}>{c.icon} {c.nom}</option>)}</select></Fl>
-    <Fl label="Contenu"><textarea value={content} onChange={e=>setContent(e.target.value)} rows={8} placeholder="Rédiger le compte-rendu..." style={{ ...iS,resize:"vertical",lineHeight:1.6 }}/></Fl>
+    <Fl label="Commission"><select value={comm} onChange={e=>setComm(e.target.value)} style={iS}><option value=""> Aucune </option>{co.map(c=><option key={c.id} value={c.nom}>{c.icon} {c.nom}</option>)}</select></Fl>
+    <Fl label="Contenu"><textarea value={content} onChange={e=>setContent(e.target.value)} rows={8} placeholder="Rediger le compte-rendu..." style={{ ...iS,resize:"vertical",lineHeight:1.6 }}/></Fl>
     <button onClick={save} disabled={saving} style={{ ...bP,width:"100%",marginTop:8 }}>{I.ok} <span>{saving?"Enregistrement...":(rp?"Modifier":"Enregistrer")}</span></button>
   </div></div>;
 }
@@ -469,10 +469,10 @@ function ConView({ el, addEl, updEl, delEl, co, ss }) {
   return <div style={{ padding:16 }}>
     <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14 }}>
       <h3 style={{ fontFamily:T.f,fontSize:15,fontWeight:700,color:T.primary,margin:0 }}>Conseillers municipaux</h3>
-      <button onClick={()=>ss({title:"Nouvel élu",component:<ElForm co={co} addEl={addEl} ss={ss}/>})} style={{ ...bS,background:T.primary,color:"#fff" }}>{I.add}<span>Ajouter</span></button>
+      <button onClick={()=>ss({title:"Nouvel elu",component:<ElForm co={co} addEl={addEl} ss={ss}/>})} style={{ ...bS,background:T.primary,color:"#fff" }}>{I.add}<span>Ajouter</span></button>
     </div>
     <div style={{ background:"#fff",borderRadius:T.r,padding:"14px 18px",marginBottom:14,boxShadow:T.sh,display:"flex",justifyContent:"space-around" }}>
-      <div style={{ textAlign:"center" }}><div style={{ fontSize:22,fontWeight:700,color:T.primary }}>{el.length}</div><div style={{ fontSize:11,color:T.tm }}>Élus</div></div>
+      <div style={{ textAlign:"center" }}><div style={{ fontSize:22,fontWeight:700,color:T.primary }}>{el.length}</div><div style={{ fontSize:11,color:T.tm }}>Elus</div></div>
       <div style={{ width:1,background:T.bd }}/>
       <div style={{ textAlign:"center" }}><div style={{ fontSize:22,fontWeight:700,color:T.accent }}>{co.length}</div><div style={{ fontSize:11,color:T.tm }}>Commissions</div></div>
     </div>
@@ -484,8 +484,8 @@ function ConView({ el, addEl, updEl, delEl, co, ss }) {
           <div style={{ fontSize:13,color:T.accent,fontWeight:500 }}>{e.role}</div>
           {e.commission&&<div style={{ fontSize:12,color:T.tm,marginTop:2 }}>{e.commission}</div>}
           <div style={{ display:"flex",gap:10,marginTop:4 }}>
-            {e.tel&&<a href={`tel:${e.tel}`} style={{ fontSize:12,color:T.primary,textDecoration:"none" }}>
-            {e.email&&<a href={`mailto:${e.email}`} style={{ fontSize:12,color:T.primary,textDecoration:"none" }}>
+            {e.tel&&<a href={`tel:${e.tel}`} style={{ fontSize:12,color:T.primary,textDecoration:"none" }}>Tel: {e.tel}</a>}
+            {e.email&&<a href={`mailto:${e.email}`} style={{ fontSize:12,color:T.primary,textDecoration:"none" }}>Email: Email</a>}
           </div>
         </div>
         <div style={{ display:"flex",flexDirection:"column",gap:4 }}>
@@ -502,12 +502,12 @@ function ElForm({ co, addEl, updEl, ss, el }) {
   const [saving,setSaving]=useState(false);
   const save=async()=>{ if(!nom)return; setSaving(true); const o={id:el?.id||gid(),nom,prenom,role,tel,email,commission:comm}; try { el?await updEl(o):await addEl(o); ss(null); } catch(e){ alert("Erreur"); } setSaving(false); };
   return <div style={{ padding:16 }}><div style={{ background:"#fff",borderRadius:T.r,padding:20,boxShadow:T.sh }}>
-    <Fl label="Prénom"><input value={prenom} onChange={e=>setPrenom(e.target.value)} style={iS}/></Fl>
+    <Fl label="Prenom"><input value={prenom} onChange={e=>setPrenom(e.target.value)} style={iS}/></Fl>
     <Fl label="Nom"><input value={nom} onChange={e=>setNom(e.target.value)} style={iS}/></Fl>
-    <Fl label="Fonction"><select value={role} onChange={e=>setRole(e.target.value)} style={iS}>{["Maire","1er Adjoint","2e Adjoint","3e Adjoint","Conseiller municipal","Conseiller délégué"].map(r=><option key={r} value={r}>{r}</option>)}</select></Fl>
-    <Fl label="Téléphone"><input type="tel" value={tel} onChange={e=>setTel(e.target.value)} placeholder="06 00 00 00 00" style={iS}/></Fl>
+    <Fl label="Fonction"><select value={role} onChange={e=>setRole(e.target.value)} style={iS}>{["Maire","1er Adjoint","2e Adjoint","3e Adjoint","Conseiller municipal","Conseiller delegue"].map(r=><option key={r} value={r}>{r}</option>)}</select></Fl>
+    <Fl label="Telephone"><input type="tel" value={tel} onChange={e=>setTel(e.target.value)} placeholder="06 00 00 00 00" style={iS}/></Fl>
     <Fl label="Email"><input type="email" value={email} onChange={e=>setEmail(e.target.value)} style={iS}/></Fl>
-    <Fl label="Commission"><select value={comm} onChange={e=>setComm(e.target.value)} style={iS}><option value="">— Aucune —</option>{co.map(c=><option key={c.id} value={c.nom}>{c.icon} {c.nom}</option>)}</select></Fl>
-    <button onClick={save} disabled={saving} style={{ ...bP,width:"100%",marginTop:8 }}>{I.ok} <span>{saving?"...":(el?"Modifier":"Ajouter l'élu")}</span></button>
+    <Fl label="Commission"><select value={comm} onChange={e=>setComm(e.target.value)} style={iS}><option value=""> Aucune </option>{co.map(c=><option key={c.id} value={c.nom}>{c.icon} {c.nom}</option>)}</select></Fl>
+    <button onClick={save} disabled={saving} style={{ ...bP,width:"100%",marginTop:8 }}>{I.ok} <span>{saving?"...":(el?"Modifier":"Ajouter l'elu")}</span></button>
   </div></div>;
 }

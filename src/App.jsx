@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-// ═══ SUPABASE CONFIG ═══
+// === SUPABASE CONFIG ===
 const SUPA_URL = "https://rknpdyfwdwobihbnfyka.supabase.co";
 const SUPA_KEY = "sb_publishable_TIXxlUUACfMYdf_GeNQMVA_rcJgJsEL";
 async function sbFetch(path, opts = {}) {
@@ -25,7 +25,7 @@ const db = {
   delete: (table, id) => sbFetch(`${table}?id=eq.${id}`, { method: "DELETE", prefer: "return=minimal" }),
   upsert: (table, data) => sbFetch(table, { method: "POST", body: JSON.stringify(data), headers: { "Prefer": "resolution=merge-duplicates,return=representation" } }),
 };
-// ═══ DEFAULTS ═══
+// === DEFAULTS ===
 const DEF_COMM = [
   { id: "c1", nom: "Finances & Budget", color: "#2563eb", icon: " " },
   { id: "c2", nom: "Urbanisme & Travaux", color: "#059669", icon: " " },
@@ -44,7 +44,7 @@ const gid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 const fmtD = d => { const x = new Date(d); return `${DF[x.getDay()]} ${x.getDate()} ${MO[x.getMonth()]} ${x.getFullYear()}`; };
 const fmtT = d => { const x = new Date(d); return `${String(x.getHours()).padStart(2,"0")}h${String(x.getMinutes()).padStart(2,"0")}`; };
 const fmtRel = ed => { const diff = new Date(ed) - new Date(), m = Math.round(diff / 60000); if (m < 0) return "maintenant"; if (m < 60) return `dans ${m} min`; const h = Math.floor(m / 60); if (h < 24) return `dans ${h}h`; return `dans ${Math.floor(h/24)}j`; };
-// ═══ ICONS ═══
+// === ICONS ===
 const I = {
   cal: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>,
   grp: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
@@ -76,7 +76,7 @@ const bI = { background:"none", border:"none", cursor:"pointer", padding:4, bord
 function Fl({ label, children }) {
   return <div style={{ marginBottom:16 }}><label style={{ display:"block", fontSize:12, fontWeight:600, color:T.tm, marginBottom:6, textTransform:"uppercase", letterSpacing:0.5 }}>{label}</label>{children}</div>;
 }
-// ═══ NOTIFICATION BANNER ═══
+// === NOTIFICATION BANNER ===
 function NotifBanner({ n, onX }) {
   if (!n) return null;
   return (
@@ -87,7 +87,7 @@ function NotifBanner({ n, onX }) {
         <div style={{ flex:1,minWidth:0 }}>
           <div style={{ fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:1,opacity:.7,marginBottom:3 }}>Rappel</div>
           <div style={{ fontSize:14,fontWeight:600,marginBottom:2 }}>{n.title}</div>
-          <div style={{ fontSize:12,opacity:.85 }}>{fmtRel(n.eventDate)} • {fmtT(n.eventDate)}</div>
+          <div style={{ fontSize:12,opacity:.85 }}>{fmtRel(n.eventDate)} - {fmtT(n.eventDate)}</div>
           {n.lieu && <div style={{ fontSize:11,opacity:.7,marginTop:2 }}> {n.lieu}</div>}
         </div>
         <button onClick={onX} style={{ background:"rgba(255,255,255,.15)",border:"none",borderRadius:8,padding:6,cursor:"pointer",color:"#fff" }}>{I.x}</button>
@@ -95,7 +95,7 @@ function NotifBanner({ n, onX }) {
     </div>
   );
 }
-// ═══ MAIN APP ═══
+// === MAIN APP ===
 export default function MairieNoailly() {
   const [tab, setTab] = useState("calendar");
   const [events, setEvents] = useState([]);
@@ -261,7 +261,7 @@ export default function MairieNoailly() {
     </div>
   );
 }
-// ═══ CALENDAR VIEW ═══
+// === CALENDAR VIEW ===
 function CalView({ ev, addEv, updEv, delEv, co, ss, cM, sCM, cY, sCY, sd, sSD }) {
   const today = new Date();
   const fd = new Date(cY, cM, 1).getDay(), dim = new Date(cY, cM+1, 0).getDate(), off = (fd+6)%7;
@@ -318,7 +318,7 @@ function EvCard({ e, co, updEv, delEv, ss }) {
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
         <div style={{ flex:1 }}>
           <div style={{ fontWeight:600,fontSize:15,marginBottom:4,display:"flex",alignItems:"center",gap:6 }}>{e.title}{hasR&&<span style={{ color:T.accent,display:"flex" }}>{I.bl}</span>}</div>
-          <div style={{ fontSize:13,color:T.tm,marginBottom:4 }}>{fmtD(e.date)} • {fmtT(e.date)}</div>
+          <div style={{ fontSize:13,color:T.tm,marginBottom:4 }}>{fmtD(e.date)} - {fmtT(e.date)}</div>
           {e.lieu&&<div style={{ fontSize:12,color:T.tm }}> {e.lieu}</div>}
           <div style={{ display:"flex",flexWrap:"wrap",gap:6,marginTop:6 }}>
             {e.commission&&<span style={{ fontSize:11,fontWeight:500,background:(cm?.color||T.accent)+"18",color:cm?.color||T.accent,padding:"3px 10px",borderRadius:20 }}>{cm?.icon} {e.commission}</span>}
@@ -380,7 +380,7 @@ function EvForm({ co, addEv, updEv, ss, ev, defDate }) {
     </div>
   );
 }
-// ═══ COMMISSIONS VIEW ═══
+// === COMMISSIONS VIEW ===
 function ComView({ co, addCo, updCo, delCo, ev, rp, ss }) {
   return (
     <div style={{ padding:16 }}>
@@ -391,7 +391,7 @@ function ComView({ co, addCo, updCo, delCo, ev, rp, ss }) {
       {co.map(c=>{ const cEv=ev.filter(e=>e.commission===c.nom),cRp=rp.filter(r=>r.commission===c.nom),nx=cEv.filter(e=>new Date(e.date)>=new Date()).sort((a,b)=>new Date(a.date)-new Date(b.date))[0];
         return <div key={c.id} style={{ background:"#fff",borderRadius:T.r,padding:"16px 18px",marginBottom:12,boxShadow:T.sh,borderLeft:`4px solid ${c.color}` }}>
           <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center" }}>
-            <div style={{ display:"flex",alignItems:"center",gap:10 }}><span style={{ fontSize:24 }}>{c.icon}</span><div><div style={{ fontWeight:600,fontSize:15 }}>{c.nom}</div><div style={{ fontSize:12,color:T.tm,marginTop:2 }}>{cEv.length} réunion{cEv.length>1?"s":""} • {cRp.length} rapport{cRp.length>1?"s":""}</div></div></div>
+            <div style={{ display:"flex",alignItems:"center",gap:10 }}><span style={{ fontSize:24 }}>{c.icon}</span><div><div style={{ fontWeight:600,fontSize:15 }}>{c.nom}</div><div style={{ fontSize:12,color:T.tm,marginTop:2 }}>{cEv.length} réunion{cEv.length>1?"s":""} - {cRp.length} rapport{cRp.length>1?"s":""}</div></div></div>
             <div style={{ display:"flex",gap:4 }}>
               <button onClick={()=>ss({title:"Modifier",component:<CoForm updCo={updCo} ss={ss} cm={c}/>})} style={{ ...bI,color:T.tm }}>{I.ed}</button>
               <button onClick={()=>{if(confirm("Supprimer ?"))delCo(c.id);}} style={{ ...bI,color:T.red }}>{I.del}</button>
@@ -418,7 +418,7 @@ function CoForm({ addCo, updCo, ss, cm }) {
     </div></div>
   );
 }
-// ═══ REPORTS VIEW ═══
+// === REPORTS VIEW ===
 function RepView({ rp, addRp, updRp, delRp, co, ss }) {
   const [q,setQ]=useState("");
   const fl=rp.filter(r=>r.title?.toLowerCase().includes(q.toLowerCase())||r.content?.toLowerCase().includes(q.toLowerCase()));
@@ -442,7 +442,7 @@ function RepView({ rp, addRp, updRp, delRp, co, ss }) {
 }
 function RpDetail({ r, co, updRp, delRp, ss }) {
   return <div style={{ padding:16 }}><div style={{ background:"#fff",borderRadius:T.r,padding:20,boxShadow:T.sh }}>
-    <div style={{ fontSize:12,color:T.tm,marginBottom:8 }}>{fmtD(r.date)}{r.commission&&` • ${r.commission}`}</div>
+    <div style={{ fontSize:12,color:T.tm,marginBottom:8 }}>{fmtD(r.date)}{r.commission&&` - ${r.commission}`}</div>
     <div style={{ fontSize:14,lineHeight:1.7,whiteSpace:"pre-wrap" }}>{r.content||"Aucun contenu."}</div>
     <div style={{ display:"flex",gap:8,marginTop:16 }}>
       <button onClick={()=>ss({title:"Modifier",component:<RpForm co={co} updRp={updRp} ss={ss} rp={r}/>})} style={{ ...bS,background:T.primary+"10",color:T.primary }}>{I.ed}<span>Modifier</span></button>
@@ -464,7 +464,7 @@ function RpForm({ co, addRp, updRp, ss, rp }) {
     <button onClick={save} disabled={saving} style={{ ...bP,width:"100%",marginTop:8 }}>{I.ok} <span>{saving?"Enregistrement...":(rp?"Modifier":"Enregistrer")}</span></button>
   </div></div>;
 }
-// ═══ CONTACTS VIEW ═══
+// === CONTACTS VIEW ===
 function ConView({ el, addEl, updEl, delEl, co, ss }) {
   return <div style={{ padding:16 }}>
     <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14 }}>
